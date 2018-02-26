@@ -21,6 +21,7 @@ class Linear(DQN):
         # this information might be useful
         # here, typically, a state shape is (80, 80, 1)
         state_shape = list(self.env.observation_space.shape)
+        num_actions = self.env.action_space.n
 
         ##############################################################
         """
@@ -63,6 +64,10 @@ class Linear(DQN):
         self.done_mask = tf.placeholder(tf.bool,
             shape=(None))
         self.lr = tf.placeholder(tf.float32)
+
+        if self.student:
+            self.teacher_q = tf.placeholder(tf.float32,
+                shape=(None, num_actions))
 
         ##############################################################
         ######################## END YOUR CODE #######################
@@ -249,5 +254,4 @@ class Linear(DQN):
         
         ##############################################################
         ######################## END YOUR CODE #######################
-    
     

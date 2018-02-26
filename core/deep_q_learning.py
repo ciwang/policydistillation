@@ -66,29 +66,38 @@ class DQN(QN):
         return state
 
 
-    def build(self):
+    def build(self, student=False):
         """
         Build model by adding all necessary variables
         """
         # add placeholders
+
         self.add_placeholders_op()
 
         # compute Q values of state
         s = self.process_state(self.s)
-        self.q = self.get_q_values_op(s, scope="q", reuse=False)
+        self.q = self.get_q_values_op(s, scope="q%d" % student, reuse=False)
 
         # compute Q values of next state
         sp = self.process_state(self.sp)
-        self.target_q = self.get_q_values_op(sp, scope="target_q", reuse=False)
+        self.target_q = self.get_q_values_op(sp, scope="target_q%d" % student, reuse=False)
 
         # add update operator for target network
-        self.add_update_target_op("q", "target_q")
+        self.add_update_target_op("q%d" % student, "target_q%d" % student)
 
         # add square loss
         self.add_loss_op(self.q, self.target_q)
 
         # add optmizer for the main networks
-        self.add_optimizer_op("q")
+        self.add_optimizer_op("q%d" % student)
+
+
+    def initialize_basic(self):
+        # create tf session
+        self.sess = tf.Session()
+
+        # for saving networks weights
+        self.saver = tf.train.Saver()
 
 
     def initialize(self):
@@ -96,8 +105,8 @@ class DQN(QN):
         Assumes the graph has been constructed
         Creates a tf Session and run initializer of variables
         """
-        # create tf session
-        self.sess = tf.Session()
+        
+        self.initialize_basic()
 
         # tensorboard stuff
         self.add_summary()
@@ -108,9 +117,6 @@ class DQN(QN):
 
         # synchronise q and target_q networks
         self.sess.run(self.update_target_op)
-
-        # for saving networks weights
-        self.saver = tf.train.Saver()
 
        
     def add_summary(self):
@@ -185,10 +191,15 @@ class DQN(QN):
         Returns:
             loss: (Q - Q_target)^2
         """
-
         s_batch, a_batch, r_batch, sp_batch, done_mask_batch = replay_buffer.sample(
             self.config.batch_size)
 
+        if not self.student: # saving states
+            self.s_batches.append(s_batch)
+            self.a_batches.append(a_batch)
+            self.r_batches.append(r_batch)
+            self.sp_batches.append(sp_batch)
+            self.done_mask_batches.append(done_mask_batch)
 
         fd = {
             # inputs
@@ -207,6 +218,10 @@ class DQN(QN):
             self.std_q_placeholder: self.std_q, 
             self.eval_reward_placeholder: self.eval_reward, 
         }
+
+        if self.student:
+            fd[self.teacher_q] = self.teacher_q_vals[self.teacher_q_idx]
+            self.teacher_q_idx += 1
 
         loss_eval, grad_norm_eval, summary, _ = self.sess.run([self.loss, self.grad_norm, 
                                                  self.merged, self.train_op], feed_dict=fd)

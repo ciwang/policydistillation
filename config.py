@@ -7,7 +7,7 @@ class config():
     high             = 255.
 
     # output config
-    output_path  = "results/q3_nature/"
+    output_path  = "results/natureqn/"
     model_output = output_path + "model.weights/"
     log_path     = output_path + "log.txt"
     plot_output  = output_path + "scores.png"
