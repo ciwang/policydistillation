@@ -8,7 +8,7 @@ from schedule import LinearExploration, LinearSchedule
 from linear import Linear
 from natureqn import NatureQN
 
-from config import config
+from config import testconfig_student as config
 import logging
 
 logging.basicConfig(level=logging.INFO)
@@ -29,7 +29,23 @@ class DistilledQN(NatureQN):
             env, config, logger=logger, student=student)
 
     def add_loss_op(self, q, target_q):
+        tau = 0.01
+        eps = 0.00001
+
+        ##############################
+
+        # MSE
         self.loss = tf.losses.mean_squared_error(q, self.teacher_q)
+
+        # NLL
+        # self.loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(
+        #     labels=tf.argmax(self.teacher_q, axis=1), 
+        #     logits=q))
+
+        # KL
+        # teacher_q_probs = tf.nn.softmax(self.teacher_q/tau, dim=1)+eps
+        # y = teacher_q_probs/(tf.nn.softmax(q, dim=1)+eps)
+        # self.loss = tf.reduce_mean(-tf.nn.softmax_cross_entropy_with_logits(labels=teacher_q_probs, logits=y))
 
 """
 Use distilled Q network for test environment.

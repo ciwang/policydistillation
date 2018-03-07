@@ -6,7 +6,7 @@ from utils.test_env import EnvTest
 from schedule import LinearExploration, LinearSchedule
 from linear import Linear
 
-from config import config
+from config import testconfig_teacher as config
 
 class NatureQN(Linear):
     """
@@ -27,6 +27,10 @@ class NatureQN(Linear):
         Returns:
             out: (tf tensor) of shape = (batch_size, num_actions)
         """
+        if self.student == True:
+            return super(NatureQN, self).get_q_values_op(
+                state, scope, reuse)
+
         # this information might be useful
         num_actions = self.env.action_space.n
         out = state

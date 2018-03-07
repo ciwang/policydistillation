@@ -3,3 +3,5 @@ gym/
 *.pyc
 results/
 *.npy
+sftp-config.json
+figures/

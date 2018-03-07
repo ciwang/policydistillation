@@ -344,9 +344,7 @@ class QN(object):
                 last_record =0
                 self.record()
 
-        # Write out q-values
-        self.logger.info("- Writing out some FUCKING DATA")
-        
+        # Write out q-values        
         np.save("static/s_batches", self.s_batches)
         np.save("static/a_batches", self.a_batches)
         np.save("static/r_batches", self.r_batches)
@@ -444,8 +442,7 @@ class QN(object):
         Evaluation with same procedure as the training
         """
         if self.student:
-            self.evaluate_fake(env, num_episodes)
-            return
+            return self.evaluate_fake(env, num_episodes)
 
         # log our activity only if default call
         if num_episodes is None:
