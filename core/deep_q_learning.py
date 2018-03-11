@@ -194,12 +194,12 @@ class DQN(QN):
         s_batch, a_batch, r_batch, sp_batch, done_mask_batch = replay_buffer.sample(
             self.config.batch_size)
 
-        if not self.student: # saving states
-            self.s_batches.append(s_batch)
-            self.a_batches.append(a_batch)
-            self.r_batches.append(r_batch)
-            self.sp_batches.append(sp_batch)
-            self.done_mask_batches.append(done_mask_batch)
+        # if not self.student: # saving states
+        #     self.s_batches.append(s_batch)
+        #     self.a_batches.append(a_batch)
+        #     self.r_batches.append(r_batch)
+        #     self.sp_batches.append(sp_batch)
+        #     self.done_mask_batches.append(done_mask_batch)
 
         fd = {
             # inputs
@@ -220,8 +220,10 @@ class DQN(QN):
         }
 
         if self.student:
-            fd[self.teacher_q] = self.teacher_q_vals[self.teacher_q_idx]
-            self.teacher_q_idx += 1
+            teacher_q_vals = self.teachermodel.sess.run([self.teachermodel.q], 
+                feed_dict={self.teachermodel.s: s_batch})[0]
+            fd[self.teacher_q] = teacher_q_vals
+            # self.teacher_q_idx += 1
 
         loss_eval, grad_norm_eval, summary, _ = self.sess.run([self.loss, self.grad_norm, 
                                                  self.merged, self.train_op], feed_dict=fd)

@@ -27,9 +27,9 @@ class NatureQN(Linear):
         Returns:
             out: (tf tensor) of shape = (batch_size, num_actions)
         """
-        if self.student == True:
-            return super(NatureQN, self).get_q_values_op(
-                state, scope, reuse)
+        # if self.student == True:
+        #     return super(NatureQN, self).get_q_values_op(
+        #         state, scope, reuse)
 
         # this information might be useful
         num_actions = self.env.action_space.n

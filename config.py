@@ -86,7 +86,7 @@ class atariconfig_teacher():
     high             = 255.
 
     # output config
-    output_path  = "results/atari/teacher"
+    output_path  = "results/atari/teacher/"
     model_output = output_path + "model.weights/"
     log_path     = output_path + "log.txt"
     plot_output  = output_path + "scores.png"
@@ -129,7 +129,7 @@ class atariconfig_student():
     high             = 255.
 
     # output config
-    output_path  = "results/atari/student"
+    output_path  = "results/atari/student/"
     model_output = output_path + "model.weights/"
     log_path     = output_path + "log.txt"
     plot_output  = output_path + "scores.png"

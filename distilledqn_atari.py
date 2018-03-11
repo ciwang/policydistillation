@@ -39,5 +39,5 @@ if __name__ == '__main__':
             config.lr_nsteps)
 
     # train model
-    model = NatureQN(env, config)
+    model = DistilledQN(env, config)
     model.run(exp_schedule, lr_schedule)

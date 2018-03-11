@@ -13,8 +13,8 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
-CKPT_DIR = 'results/natureqn/model.weights/'
-Q_VALUES = 'static/all_q_values.npy'
+CKPT_DIR = 'results/test/teacher/model.weights/'
+# Q_VALUES = 'static/all_q_values.npy'
 
 def initialize_teacher(session, model, train_dir, seed=42):
     tf.set_random_seed(seed)
@@ -23,8 +23,10 @@ def initialize_teacher(session, model, train_dir, seed=42):
 
 class DistilledQN(NatureQN):
     def __init__(self, env, config, logger=None, student=True):
-        self.teacher_q_vals = np.load(Q_VALUES)
-        self.teacher_q_idx = 0
+        teachermodel = NatureQN(env, config)
+        teachermodel.initialize_basic()
+        initialize_teacher(teachermodel.sess, teachermodel, CKPT_DIR)
+        self.teachermodel = teachermodel
         super(DistilledQN, self).__init__(
             env, config, logger=logger, student=student)
 
@@ -35,7 +37,7 @@ class DistilledQN(NatureQN):
         ##############################
 
         # MSE
-        self.loss = tf.losses.mean_squared_error(q, self.teacher_q)
+        # self.loss = tf.losses.mean_squared_error(q, self.teacher_q)
 
         # NLL
         # self.loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(
@@ -43,9 +45,9 @@ class DistilledQN(NatureQN):
         #     logits=q))
 
         # KL
-        # teacher_q_probs = tf.nn.softmax(self.teacher_q/tau, dim=1)+eps
-        # y = teacher_q_probs/(tf.nn.softmax(q, dim=1)+eps)
-        # self.loss = tf.reduce_mean(-tf.nn.softmax_cross_entropy_with_logits(labels=teacher_q_probs, logits=y))
+        _p = tf.nn.softmax(self.teacher_q/tau, dim=1)+eps
+        _q = tf.nn.softmax(q, dim=1)+eps
+        self.loss = tf.reduce_sum(_p * tf.log(_p/_q))
 
 """
 Use distilled Q network for test environment.

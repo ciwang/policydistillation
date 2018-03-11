@@ -250,18 +250,18 @@ class QN(object):
             lr_schedule: Schedule for learning rate
         """
 
-        if self.student:
-            self.train_fake(exp_schedule, lr_schedule)
-            return
+        # if self.student:
+        #     self.train_fake(exp_schedule, lr_schedule)
+        #     return
 
         # initialize replay buffer and variables
-        self.s_batches = []
-        self.a_batches = []
-        self.r_batches = []
-        self.sp_batches = []
-        self.done_mask_batches= []
-        self.q_values = []
-        self.q_inputs = []
+        # self.s_batches = []
+        # self.a_batches = []
+        # self.r_batches = []
+        # self.sp_batches = []
+        # self.done_mask_batches= []
+        # self.q_values = []
+        # self.q_inputs = []
 
         replay_buffer = ReplayBuffer(self.config.buffer_size, self.config.state_history)
         rewards = deque(maxlen=self.config.num_episodes_test)
@@ -288,7 +288,7 @@ class QN(object):
                 # replay memory stuff
                 idx      = replay_buffer.store_frame(state)
                 q_input = replay_buffer.encode_recent_observation()
-                self.q_inputs.append(q_input)
+                # self.q_inputs.append(q_input)
 
                 # chose action according to current Q and exploration
                 best_action, q_values = self.get_best_action(q_input)
@@ -345,17 +345,17 @@ class QN(object):
                 self.record()
 
         # Write out q-values        
-        np.save("static/s_batches", self.s_batches)
-        np.save("static/a_batches", self.a_batches)
-        np.save("static/r_batches", self.r_batches)
-        np.save("static/sp_batches", self.sp_batches)
-        np.save("static/done_mask_batches", self.done_mask_batches)
+        # np.save("static/s_batches", self.s_batches)
+        # np.save("static/a_batches", self.a_batches)
+        # np.save("static/r_batches", self.r_batches)
+        # np.save("static/sp_batches", self.sp_batches)
+        # np.save("static/done_mask_batches", self.done_mask_batches)
 
-        for s_batch in self.s_batches:
-            q_value = self.sess.run(self.q, feed_dict={self.s: s_batch})
-            self.q_values.append(q_value)
-        np.save("static/all_q_values", self.q_values)
-        np.save("static/all_q_inputs", self.q_inputs)
+        # for s_batch in self.s_batches:
+        #     q_value = self.sess.run(self.q, feed_dict={self.s: s_batch})
+        #     self.q_values.append(q_value)
+        # np.save("static/all_q_values", self.q_values)
+        # np.save("static/all_q_inputs", self.q_inputs)
 
         # last words
         self.logger.info("- Training done.")
@@ -441,8 +441,8 @@ class QN(object):
         """
         Evaluation with same procedure as the training
         """
-        if self.student:
-            return self.evaluate_fake(env, num_episodes)
+        # if self.student:
+        #     return self.evaluate_fake(env, num_episodes)
 
         # log our activity only if default call
         if num_episodes is None:
@@ -468,7 +468,7 @@ class QN(object):
                 # store last state in buffer
                 idx     = replay_buffer.store_frame(state)
                 q_input = replay_buffer.encode_recent_observation()
-                self.q_inputs.append(q_input)
+                # self.q_inputs.append(q_input)
 
                 action = self.get_action(q_input)
 
