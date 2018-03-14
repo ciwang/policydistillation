@@ -20,6 +20,7 @@ def initialize_teacher(session, model, train_dir, seed=42):
     tf.set_random_seed(seed)
     logging.info("Reading model parameters from %s" % train_dir)
     model.saver.restore(session, train_dir)
+    logging.info('[Teacher] Num params: %d' % model.size)
 
 class DistilledQN(NatureQN):
     def __init__(self, env, config, logger=None, student=True):
@@ -37,7 +38,7 @@ class DistilledQN(NatureQN):
         ##############################
 
         # MSE
-        # self.loss = tf.losses.mean_squared_error(q, self.teacher_q)
+        self.loss = tf.losses.mean_squared_error(q, self.teacher_q)
 
         # NLL
         # self.loss = tf.reduce_mean(tf.nn.sparse_softmax_cross_entropy_with_logits(
@@ -45,9 +46,9 @@ class DistilledQN(NatureQN):
         #     logits=q))
 
         # KL
-        _p = tf.nn.softmax(self.teacher_q/tau, dim=1)+eps
-        _q = tf.nn.softmax(q, dim=1)+eps
-        self.loss = tf.reduce_sum(_p * tf.log(_p/_q))
+        # _p = tf.nn.softmax(self.teacher_q/tau, dim=1)+eps
+        # _q = tf.nn.softmax(q, dim=1)+eps
+        # self.loss = tf.reduce_sum(_p * tf.log(_p/_q))
 
 """
 Use distilled Q network for test environment.

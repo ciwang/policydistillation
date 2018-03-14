@@ -57,11 +57,14 @@ class NatureQN(Linear):
         ##############################################################
         ################ YOUR CODE HERE - 10-15 lines ################ 
 
+        # compress the student network
+        size1, size2, size3, size4 = (16, 16, 16, 128) if self.student else (32, 64, 64, 512)
+
         with tf.variable_scope(scope, reuse=reuse):
-            conv1 = layers.conv3d(inputs=out, num_outputs=32, kernel_size=[8,8], stride=4) #20
-            conv2 = layers.conv3d(inputs=conv1, num_outputs=64, kernel_size=[4,4], stride=2) #10
-            conv3 = layers.conv3d(inputs=conv2, num_outputs=64, kernel_size=[3,3], stride=1) #10
-            hidden = layers.fully_connected(layers.flatten(conv3), 512)
+            conv1 = layers.conv3d(inputs=out, num_outputs=size1, kernel_size=[8,8], stride=4) #20
+            conv2 = layers.conv3d(inputs=conv1, num_outputs=size2, kernel_size=[4,4], stride=2) #10
+            conv3 = layers.conv3d(inputs=conv2, num_outputs=size3, kernel_size=[3,3], stride=1) #10
+            hidden = layers.fully_connected(layers.flatten(conv3), size4)
             out = layers.fully_connected(hidden, num_actions, activation_fn=None)
 
         ##############################################################

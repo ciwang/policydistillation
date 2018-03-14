@@ -1,6 +1,7 @@
 import os
 import gym
 import numpy as np
+import tensorflow as tf
 import logging
 import time
 import sys
@@ -39,6 +40,11 @@ class QN(object):
 
         # build model
         self.build(student=student)
+
+        self.size = sum(v.get_shape().num_elements() for v in tf.trainable_variables())
+        if self.student:
+            self.size -= self.teachermodel.size
+        logging.info('Num params: %d' % self.size)
 
 
     def build(self):
