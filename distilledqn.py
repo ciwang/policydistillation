@@ -13,8 +13,7 @@ import logging
 
 logging.basicConfig(level=logging.INFO)
 
-CKPT_DIR = 'results/test/teacher/model.weights/'
-# Q_VALUES = 'static/all_q_values.npy'
+CKPT_DIR = 'results/atari/teacher/model.weights/'
 
 def initialize_teacher(session, model, train_dir, seed=42):
     tf.set_random_seed(seed)
@@ -36,6 +35,8 @@ class DistilledQN(NatureQN):
         eps = 0.00001
 
         ##############################
+
+        # Loss functions for distillation
 
         # MSE
         self.loss = tf.losses.mean_squared_error(q, self.teacher_q)

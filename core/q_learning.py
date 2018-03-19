@@ -44,7 +44,7 @@ class QN(object):
         self.size = sum(v.get_shape().num_elements() for v in tf.trainable_variables())
         if self.student:
             self.size -= self.teachermodel.size
-        logging.info('Num params: %d' % self.size)
+        self.logger.info('Num params: %d' % self.size)
 
 
     def build(self):
@@ -148,104 +148,6 @@ class QN(object):
             self.eval_reward = scores_eval[-1]
 
 
-    def train_fake(self, exp_schedule, lr_schedule):
-        """
-        Performs training of Q
-
-        Args:
-            exp_schedule: Exploration instance s.t.
-                exp_schedule.get_action(best_action) returns an action
-            lr_schedule: Schedule for learning rate
-        """
-
-        # initialize replay buffer and variables
-        fake_replay_buffer = FakeReplayBuffer(self.config.buffer_size, self.config.state_history)
-        rewards = deque(maxlen=self.config.num_episodes_test)
-        max_q_values = deque(maxlen=1000)
-        q_values = deque(maxlen=1000)
-        self.init_averages()
-
-        t = last_eval = last_record = 0 # time control of nb of steps
-        scores_eval = [] # list of scores computed at iteration time
-        scores_eval += [self.evaluate()]
-        
-        prog = Progbar(target=self.config.nsteps_train)
-
-        # interact with environment
-        allsteps = []
-        while t < self.config.nsteps_train:
-            total_reward = 0
-            state = self.env.reset()
-            while True:
-                t += 1
-                last_eval += 1
-                last_record += 1
-                if self.config.render_train: self.env.render()
-                # # replay memory stuff
-                # idx      = replay_buffer.store_frame(state)
-                q_input = fake_replay_buffer.encode_recent_observation()
-
-                # # chose action according to current Q and exploration
-                best_action, q_values = self.get_best_action(q_input)
-                action                = exp_schedule.get_action(best_action)
-
-                # store q values
-                max_q_values.append(max(q_values))
-                q_values += list(q_values)
-
-                # perform action in env
-                new_state, reward, done, info = self.env.step(action)
-
-                # store the transition
-                # replay_buffer.store_effect(idx, action, reward, done)
-                # state = new_state
-
-                # perform a training step
-                loss_eval, grad_eval = self.train_step(t, fake_replay_buffer, lr_schedule.epsilon)
-
-                # logging stuff
-                if ((t > self.config.learning_start) and (t % self.config.log_freq == 0) and
-                   (t % self.config.learning_freq == 0)):
-                    self.update_averages(rewards, max_q_values, q_values, scores_eval)
-                    exp_schedule.update(t)
-                    lr_schedule.update(t)
-                    if len(rewards) > 0:
-                        prog.update(t + 1, exact=[("Loss", loss_eval), ("Avg R", self.avg_reward), 
-                                        ("Max R", np.max(rewards)), ("eps", exp_schedule.epsilon), 
-                                        ("Grads", grad_eval), ("Max Q", self.max_q), 
-                                        ("lr", lr_schedule.epsilon)])
-
-                elif (t < self.config.learning_start) and (t % self.config.log_freq == 0):
-                    sys.stdout.write("\rPopulating the memory {}/{}...".format(t, 
-                                                        self.config.learning_start))
-                    sys.stdout.flush()
-
-                # count reward
-                total_reward += reward
-                if done or t >= self.config.nsteps_train:
-                    break
-
-            # updates to perform at the end of an episode
-            rewards.append(total_reward)          
-
-            if (t > self.config.learning_start) and (last_eval > self.config.eval_freq):
-                # evaluate our policy
-                last_eval = 0
-                print("")
-                scores_eval += [self.evaluate()]
-
-            if (t > self.config.learning_start) and self.config.record and (last_record > self.config.record_freq):
-                self.logger.info("Recording...")
-                last_record =0
-                self.record()
-
-        # last words
-        self.logger.info("- Training done.")
-        self.save()
-        scores_eval += [self.evaluate()]
-        export_plot(scores_eval, "Scores", self.config.plot_output)
-
-
     def train(self, exp_schedule, lr_schedule):
         """
         Performs training of Q
@@ -255,19 +157,6 @@ class QN(object):
                 exp_schedule.get_action(best_action) returns an action
             lr_schedule: Schedule for learning rate
         """
-
-        # if self.student:
-        #     self.train_fake(exp_schedule, lr_schedule)
-        #     return
-
-        # initialize replay buffer and variables
-        # self.s_batches = []
-        # self.a_batches = []
-        # self.r_batches = []
-        # self.sp_batches = []
-        # self.done_mask_batches= []
-        # self.q_values = []
-        # self.q_inputs = []
 
         replay_buffer = ReplayBuffer(self.config.buffer_size, self.config.state_history)
         rewards = deque(maxlen=self.config.num_episodes_test)
@@ -350,19 +239,6 @@ class QN(object):
                 last_record =0
                 self.record()
 
-        # Write out q-values        
-        # np.save("static/s_batches", self.s_batches)
-        # np.save("static/a_batches", self.a_batches)
-        # np.save("static/r_batches", self.r_batches)
-        # np.save("static/sp_batches", self.sp_batches)
-        # np.save("static/done_mask_batches", self.done_mask_batches)
-
-        # for s_batch in self.s_batches:
-        #     q_value = self.sess.run(self.q, feed_dict={self.s: s_batch})
-        #     self.q_values.append(q_value)
-        # np.save("static/all_q_values", self.q_values)
-        # np.save("static/all_q_inputs", self.q_inputs)
-
         # last words
         self.logger.info("- Training done.")
         self.save()
@@ -395,54 +271,6 @@ class QN(object):
 
         return loss_eval, grad_eval
 
-
-    def evaluate_fake(self, env=None, num_episodes=None):
-        # log our activity only if default call
-        if num_episodes is None:
-            self.logger.info("Evaluating...")
-
-        # arguments defaults
-        if num_episodes is None:
-            num_episodes = self.config.num_episodes_test
-
-        if env is None:
-            env = self.env
-
-        # replay memory to play
-        fake_replay_buffer = FakeReplayBuffer(self.config.buffer_size, self.config.state_history)
-        rewards = []
-
-        for i in range(num_episodes):
-            total_reward = 0
-            state = env.reset()
-            while True:
-                if self.config.render_test: env.render()
-
-                q_input = fake_replay_buffer.encode_recent_observation()
-
-                action = self.get_action(q_input)
-
-                # perform action in env
-                new_state, reward, done, info = env.step(action)
-
-                # count reward
-                total_reward += reward
-                if done:
-                    break
-
-            # updates to perform at the end of an episode
-            rewards.append(total_reward)     
-
-        avg_reward = np.mean(rewards)
-        sigma_reward = np.sqrt(np.var(rewards) / len(rewards))
-
-        if num_episodes > 1:
-            msg = "Average reward: {:04.2f} +/- {:04.2f}".format(avg_reward, sigma_reward)
-            self.logger.info(msg)
-
-        return avg_reward
-
-
     def evaluate(self, env=None, num_episodes=None):
         """
         Evaluation with same procedure as the training
@@ -474,7 +302,6 @@ class QN(object):
                 # store last state in buffer
                 idx     = replay_buffer.store_frame(state)
                 q_input = replay_buffer.encode_recent_observation()
-                # self.q_inputs.append(q_input)
 
                 action = self.get_action(q_input)
 

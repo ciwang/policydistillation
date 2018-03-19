@@ -23,23 +23,9 @@ class LinearSchedule(object):
         Args:
             t: (int) nth frames
         """
-        ##############################################################
-        """
-        TODO: modify self.epsilon such that 
-               for t = 0, self.epsilon = self.eps_begin
-               for t = self.nsteps, self.epsilon = self.eps_end
-               linear decay between the two
-
-              self.epsilon should never go under self.eps_end
-        """
-        ##############################################################
-        ################ YOUR CODE HERE - 3-4 lines ################## 
 
         ratio = max(1 - float(t)/self.nsteps, 0)
         self.epsilon = self.eps_end + (self.eps_begin-self.eps_end)*ratio
-
-        ##############################################################
-        ######################## END YOUR CODE ############## ########
 
 
 class LinearExploration(LinearSchedule):
@@ -64,28 +50,12 @@ class LinearExploration(LinearSchedule):
         Returns:
             an action
         """
-        ##############################################################
-        """
-        TODO: with probability self.epsilon, return a random action
-               else, return best_action
-
-               you can access the environment stored in self.env
-               and epsilon with self.epsilon
-
-               you may want to use env.action_space.sample() to generate 
-               a random action        
-        """
-        ##############################################################
-        ################ YOUR CODE HERE - 4-5 lines ##################
 
         rand = np.random.choice([True, False], p=[self.epsilon, 1-self.epsilon])
         if rand:
             return self.env.action_space.sample()
         else:
             return best_action
-
-        ##############################################################
-        ######################## END YOUR CODE #######################
 
 
 

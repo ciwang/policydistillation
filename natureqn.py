@@ -27,35 +27,9 @@ class NatureQN(Linear):
         Returns:
             out: (tf tensor) of shape = (batch_size, num_actions)
         """
-        # if self.student == True:
-        #     return super(NatureQN, self).get_q_values_op(
-        #         state, scope, reuse)
-
-        # this information might be useful
+        
         num_actions = self.env.action_space.n
         out = state
-        ##############################################################
-        """
-        TODO: implement the computation of Q values like in the paper
-                https://storage.googleapis.com/deepmind-data/assets/papers/DeepMindNature14236Paper.pdf
-                https://www.cs.toronto.edu/~vmnih/docs/dqn.pdf
-
-              you may find the section "model architecture" of the appendix of the 
-              nature paper particulary useful.
-
-              store your result in out of shape = (batch_size, num_actions)
-
-        HINT: you may find tensorflow.contrib.layers useful (imported)
-              make sure to understand the use of the scope param
-              make sure to flatten() the tensor before connecting it to fully connected layers 
-
-              you can use any other methods from tensorflow
-              you are not allowed to import extra packages (like keras,
-              lasagne, cafe, etc.)
-
-        """
-        ##############################################################
-        ################ YOUR CODE HERE - 10-15 lines ################ 
 
         # compress the student network
         size1, size2, size3, size4 = (16, 16, 16, 128) if self.student else (32, 64, 64, 512)
@@ -67,8 +41,6 @@ class NatureQN(Linear):
             hidden = layers.fully_connected(layers.flatten(conv3), size4)
             out = layers.fully_connected(hidden, num_actions, activation_fn=None)
 
-        ##############################################################
-        ######################## END YOUR CODE #######################
         return out
 
 
