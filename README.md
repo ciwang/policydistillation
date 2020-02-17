@@ -1,5 +1,7 @@
 # cs234-policydist
 
+## NOTE: THIS CODE IS NOT MAINTAINED. PLEASE DO NOT USE IT.
+
 Reproducing the algorithm described in [Rusu et al., 2016](https://arxiv.org/abs/1511.06295). 
 
 "Quick" start:
